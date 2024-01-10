@@ -4,22 +4,23 @@
 #include <ctype.h>
 #include <unistd.h>
 #include "iter.h"
-#include "read.h"
-#include "write.h"
 
 int main(int argc, char**argv){
 	srand(time(NULL));
+	int finish=0;	   // jeśli 1 - kończymy program
 	int c;
 	int m=0;
 	int n=0;
 	int i=0;  	   // m,n - wymiary planszy, i - liczba iteracji
 	char *name; 	   // przedrostek nazw plików, do których będziemy zapisywać
 	int pos[2];	   // początkowa pozycja mrówki 
-	char dir='N'; 	   // początkowy kierunek mrówki
+	pos[0]=-1;	   // -1 będzie oznaczać, że użytkownik nie podał pozycji mrówki
+	pos[1]=-1;
+	int dir=0; 	   // początkowy kierunek mrówki
 	double blacks = 0; // % zapełnienia mapy czarnymi polami (domyślnie 0)
 	char *file;	   // nazwa pliku, z którego wczytamy mapę użytkownika
 	int aflag = 0;     // flaga -a
-	int j,k;	   // zmienne sterujące ('i' używamy już do czegoś innego)
+	int j,k,l;	   // zmienne sterujące ('i' używamy już do czegoś innego)
 
 	// Dostępne flagi:
 	// -c - wczytanie własnego pliku z gotową planszą (opcjonalnie)
@@ -35,9 +36,9 @@ int main(int argc, char**argv){
 	// -y - początkowa kolumna mrówki (opcjonalnie)
 	//      jeżeli początkowa pozycja mrówki nie jest podana, mrówka zostanie ustawiona
 	//      na środku planszy
-	// -d - początkowy kierunek mrówki: 'N', 'S', 'W' lub 'E' (opcjonalnie, domyślnie 'N')
+	// -d - początkowy kierunek mrówki: 0-N, 1-E, 2-S, 3-W (opcjonalnie, domyślnie 0 (N))
 	
-	while ((c = getopt(argc, argv, "c:b:f:m:n:i:ax:y:")) != -1)
+	while ((c = getopt(argc, argv, "c:b:f:m:n:i:ax:y:d:")) != -1)
 		switch(c){
 			case 'c':
 				file = optarg;
@@ -67,7 +68,7 @@ int main(int argc, char**argv){
 				pos[1] = atoi(optarg);
 				break;
 			case 'd':
-				dir = optarg;
+				dir = atoi(optarg);
 				break;
 			case '?':
 				if (optopt == 'c' || optopt == 'b' || optopt == 'f' || optopt == 'm' || optopt == 'n' || optopt == 'i' || optopt == 'x' || optopt == 'y')
@@ -81,18 +82,17 @@ int main(int argc, char**argv){
 		}
 	// deklaracja planszy
 	board_t board;
-	board.finish = 0;
 	if (file != NULL){
 		// tutaj zapiszemy mapę użytkownika
 		// i ustalimy wymiary
 	} else {
 		board.m = m;
 		board.n = n;
-		board.x = pos[0];
-		board.y = pos[1];
-		board.dir = dir;
+		board.pos = malloc(2*sizeof(int));
+		board.pos[0] = pos[0];
+		board.pos[1] = pos[1];
 		if (m>0 && n>0)
-			board.data = malloc(m*n*sizeof(int));
+			board.data = (int**)malloc(board.m*board.n*sizeof(int));
 	}
 	
 	if (m<=0 || n<=0){
@@ -112,11 +112,20 @@ int main(int argc, char**argv){
 		fprintf(stderr, "Program kończy działanie (kod błędu: 101).\n");
 		return 101;
 	}
-
+	
+	// jeżeli nie podano początkowej pozycji mrówki - ustawiamy ją na środku
+	if (board.pos[0] == -1)
+		board.pos[0] = board.m/2;
+	if (board.pos[1] == -1)
+		board.pos[1] = board.n/2;
+	
 	// domyślnie zapełniamy planszę białymi polami
+	int *tmp;
 	for (j=0; j<board.m; j++){
+		tmp = (int*)malloc(n*sizeof(int));
 		for (k=0; k<board.n; k++)
-			board.data[j][k]=0;
+			tmp[k]=0;
+		board.data[j]=tmp;
 	}
 
 	// jeżeli flaga -b podana, wówczas:
@@ -138,10 +147,42 @@ int main(int argc, char**argv){
 	
 	// tutaj wykonujemy iteracje
 	j=0;
-	while (j<i && board.finish==0){
-		iter(board,aflag);
-		// tu będzie funkcja na zapisanie iteracji w pliku
+	while (j<i && finish==0){
 		j++;
+		if (board.data[board.pos[0]][board.pos[1]]==0){
+			dir++;
+			if (dir==4)
+				dir=0;
+			board.data[board.pos[0]][board.pos[1]]=1;
+		} else {
+			dir--;
+			if (dir==-1)
+				dir=3;
+			board.data[board.pos[0]][board.pos[1]]=0;
+		}
+		move(board,dir);
+		
+		if (out_of(board)==1){
+			if (aflag==0){
+				finish=1;
+				break;
+			} else
+				put_back_on(board);
+		}
+		// tu będzie funkcja na zapisanie iteracji w pliku
+		// narazie wypisuję tablicę (w postaci binarnej) na stdout
+		printf("Iteracja nr %d\n", j);
+		for (k=0;k<board.m;k++){
+			printf("[%d", board.data[k][0]);
+			for (l=1;l<board.n;l++)
+				printf(" %d", board.data[k][l]);
+			printf("]\n");
+		}
+		printf("\n");
+	}
+	if (finish==1){
+		printf("Mrówka wyszła poza planszę.\n");
+		printf("Program zakończył działanie po wykonaniu %d z %d iteracji.\n\n", --j, i);
 	}
 
 	return 0;

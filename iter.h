@@ -2,16 +2,13 @@
 #define ITER_H
 
 typedef struct {
-	int finish; // jeżeli równe 1 - kończymy działanie
 	int m,n;    // wymiary planszy
-	int x,y;    // aktualna pozycja mrówki
-	char dir;   // aktualny kierunek mrówki
+	int *pos;   // aktualna pozycja mrówki
 	int **data; // dane
 } board_t;
 
-char rotate_right(char dir);
-char rotate_left(char dir);
-void move(board_t board, int a);
-void iter(board_t board, int a);
+void move(board_t board, int dir);
+int out_of(board_t board);
+void put_back_on(board_t board);
 
 #endif
