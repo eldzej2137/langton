@@ -97,7 +97,7 @@ void czarnez(char pole, FILE *file){
 
 
 
-void write(int n, int m, int x, int  y, char** plansza, int itnum)
+void writex(int n, int m, int x, int  y, char** plansza, int itnum)
 
  {	
 	char nazwaPliku[10]; 

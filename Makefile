@@ -1,2 +1,2 @@
 all:
-	gcc *.c -Wall --pedantic -o run
+	gcc *.c -ggdb -Wall --pedantic -o run

@@ -4,6 +4,24 @@
 #include <ctype.h>
 #include <unistd.h>
 #include "iter.h"
+#include "write.h"
+
+// LINE_VERTICAL:│
+// LINE_HORIZONTAL:─
+// LINE_DOWN_RIGHT:┌
+// LINE_DOWN_LEFT:┐
+// LINE_UP_RIGHT:└
+// LINE_UP_LEFT:┘
+// SQUARE_WHITE: 
+// SQUARE_BLACK:█
+// ARROW_NORTH_WHITE:△
+// ARROW_NORTH_BLACK:▲
+// ARROW_EAST_WHITE:▷
+// ARROW_EAST_BLACK:▶
+// ARROW_SOUTH_WHITE:▽
+// ARROW_SOUTH_BLACK:▼
+// ARROW_WEST_WHITE:◁
+// ARROW_WEST_BLACK:◀
 
 int main(int argc, char**argv){
 	srand(time(NULL));
@@ -21,6 +39,7 @@ int main(int argc, char**argv){
 	char *file;	   // nazwa pliku, z którego wczytamy mapę użytkownika
 	int aflag = 0;     // flaga -a
 	int j,k,l;	   // zmienne sterujące ('i' używamy już do czegoś innego)
+	int *tmp;
 
 	// Dostępne flagi:
 	// -c - wczytanie własnego pliku z gotową planszą (opcjonalnie)
@@ -83,8 +102,33 @@ int main(int argc, char**argv){
 	// deklaracja planszy
 	board_t board;
 	if (file != NULL){
-		// tutaj zapiszemy mapę użytkownika
-		// i ustalimy wymiary
+		FILE *in = fopen(file,"r");
+		fscanf(in,"%d %d %d %d %d",&m,&n,&pos[0],&pos[1],&dir);
+		board.m = m;
+		board.n = n;
+		if (m>0 && n>0)
+			board.data = (int**)malloc(board.m*board.n*sizeof(int));
+		else {
+			fprintf(stderr, "Błąd: wymiary planszy podane w pliku niedodatnie.\n");
+			fprintf(stderr, "Program kończy działanie (kod błędu: 004).\n");
+			return 4;
+		}
+		int *datax=malloc(m*n*sizeof(int));
+		for (j=0; j<m*n; j++){
+			fscanf(in,"%d",&datax[j]);
+		}
+		board.pos = malloc(2*sizeof(int));
+		board.pos[0] = pos[0];
+		board.pos[1] = pos[1];
+
+		for (j=0; j<board.m; j++){
+			tmp = malloc(board.n*sizeof(int));
+			for (k=0; k<board.n; k++){
+				tmp[k]=datax[j*board.n+k];
+			}
+			board.data[j]=tmp;
+		}
+		fclose(in);
 	} else {
 		board.m = m;
 		board.n = n;
@@ -120,12 +164,13 @@ int main(int argc, char**argv){
 		board.pos[1] = board.n/2;
 	
 	// domyślnie zapełniamy planszę białymi polami
-	int *tmp;
-	for (j=0; j<board.m; j++){
-		tmp = (int*)malloc(n*sizeof(int));
-		for (k=0; k<board.n; k++)
-			tmp[k]=0;
-		board.data[j]=tmp;
+	if (file==NULL){
+		for (j=0; j<board.m; j++){
+			tmp = (int*)malloc(n*sizeof(int));
+			for (k=0; k<board.n; k++)
+				tmp[k]=0;
+			board.data[j]=tmp;
+		}
 	}
 
 	// jeżeli flaga -b podana, wówczas:
@@ -171,6 +216,7 @@ int main(int argc, char**argv){
 		}
 		// tu będzie funkcja na zapisanie iteracji w pliku
 		// narazie wypisuję tablicę (w postaci binarnej) na stdout
+		
 		printf("Iteracja nr %d\n", j);
 		for (k=0;k<board.m;k++){
 			printf("[%d", board.data[k][0]);
@@ -179,11 +225,13 @@ int main(int argc, char**argv){
 			printf("]\n");
 		}
 		printf("\n");
+		
 	}
 	if (finish==1){
 		printf("Mrówka wyszła poza planszę.\n");
 		printf("Program zakończył działanie po wykonaniu %d z %d iteracji.\n\n", --j, i);
 	}
-
+	
+	free(tmp);
 	return 0;
 }
