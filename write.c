@@ -36,7 +36,7 @@
 //└───┘
 
 
-void bialez(char pole,FILE *file){
+void bialez(int pole,FILE *file){
 	
 fprintf(file,"│ ");
         switch (pole){                  
@@ -44,15 +44,15 @@ fprintf(file,"│ ");
 						fprintf(file,"▲");
 						break;
 
-                                       case 2:
+                                       case 1:
 						fprintf(file,"▼");
 						break;
 
-                                       case 4:
+                                       case 2:
 						fprintf(file,"▶");
 						break;
 
-                                       case 6:
+                                       case 3:
 						fprintf(file,"◀");
 						break;
                                        
@@ -62,23 +62,23 @@ fprintf(file,"│ ");
         
 }
 
-void czarnez(char pole, FILE *file){
+void czarnez(int pole, FILE *file){
 	fprintf(file,"│█");
 	switch (pole){
 
-                                       case 1:
+                                       case 0:
 						fprintf(file,"△");
 						break;
 
-                                       case 3:
+                                       case 1:
 						fprintf(file,"▽");
 						break;
 
-                                       case 5:
+                                       case 2:
 						fprintf(file,"▷");
 						break;
 
-                                       case 7:
+                                       case 3:
 						fprintf(file,"◁");
 						break;
                                }
@@ -97,7 +97,7 @@ void czarnez(char pole, FILE *file){
 
 
 
-void writex(int n, int m, int x, int  y, char** plansza, int itnum)
+void write(int n, int m, int x, int  y, int** plansza, int itnum, struct board_t, int kierunek)
 
  {	
 	char nazwaPliku[10]; 
@@ -110,17 +110,17 @@ void writex(int n, int m, int x, int  y, char** plansza, int itnum)
 		{
 			if(s==1){
 				if (i==x && j==y){
-					if((plansza[x][y]&1)==0)
+					if(plansza[x][y]==0)
 						{
-							bialez(plansza[x][y],file);	
+							bialez(kierunek,file);	
 						}
 					else{
-						czarnez(plansza[x][y],file);
+						czarnez(kierunek,file);
 					}	
 				}
 				else
 				{
-					  if((plansza[i][j]&1)==0)
+					  if(plansza[i][j]==0)
                                                 {
                                                        fprintf(file,"│   │");
                                                 }
