@@ -1,3 +1,4 @@
+#include "iter.h"
 #include <string.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -19,37 +20,34 @@
 // ARROW_WEST_WHITE:◁
 // ARROW_WEST_BLACK:◀
 
-//czarny - xx1 biały- xx0
-//góra -00x dół-01x wschód - 10x zachód 11x
 //┌───┐
 //│   │
 //└───┘
-//
 //┌───┐
-//│ ▲ │
+//│ △ │
 //└───┘
 //┌───┐
-//│█△█│
+//│█▲█│
 //└───┘
 //┌───┐
 //│███│
 //└───┘
 
 
-void bialez(int pole,FILE *file){
+void czarnez(int pole,FILE *file){
 	
-fprintf(file,"│ ");
+fprintf(file,"│█");
         switch (pole){                  
                                        case 0:
 						fprintf(file,"▲");
 						break;
 
                                        case 1:
-						fprintf(file,"▼");
+						fprintf(file,"▶");
 						break;
 
                                        case 2:
-						fprintf(file,"▶");
+						fprintf(file,"▼");
 						break;
 
                                        case 3:
@@ -57,13 +55,13 @@ fprintf(file,"│ ");
 						break;
                                        
                                }
-        fprintf(file," │");
+        fprintf(file,"█│");
         
         
 }
 
-void czarnez(int pole, FILE *file){
-	fprintf(file,"│█");
+void bialez(int pole, FILE *file){
+	fprintf(file,"│ ");
 	switch (pole){
 
                                        case 0:
@@ -82,7 +80,7 @@ void czarnez(int pole, FILE *file){
 						fprintf(file,"◁");
 						break;
                                }
-        fprintf(file,"█│");
+        fprintf(file," │");
 }
 
 
@@ -96,21 +94,21 @@ void czarnez(int pole, FILE *file){
 
 
 
-
-void write(int n, int m, int x, int  y, int** plansza, int itnum, struct board_t, int kierunek)
+// write1, a nie write, bo write jest zdefiniowane w unistd.h
+void write1(int itnum, board_t board, int kierunek)
 
  {	
-	char nazwaPliku[10]; 
-        sprintf(nazwaPliku, "ite_%d", itnum);
+	char nazwaPliku[20]; 
+        sprintf(nazwaPliku, "iter/iter_%d", itnum);
 	FILE *file = fopen(nazwaPliku, "w");
- 	for(int i=0;i<n;i++){
+ 	for(int i=0;i<board.m;i++){
 		for (int s=0;s<3;s++){
 
-		for (int j=0;j<m;j++)
+		for (int j=0;j<board.n;j++)
 		{
 			if(s==1){
-				if (i==x && j==y){
-					if(plansza[x][y]==0)
+				if (i==board.pos[0] && j==board.pos[1]){
+					if(board.data[board.pos[0]][board.pos[1]]==0)
 						{
 							bialez(kierunek,file);	
 						}
@@ -120,12 +118,12 @@ void write(int n, int m, int x, int  y, int** plansza, int itnum, struct board_t
 				}
 				else
 				{
-					  if(plansza[i][j]==0)
+					  if(board.data[i][j]==0)
                                                 {
                                                        fprintf(file,"│   │");
                                                 }
                                         else{
-                                                fprintf(file,"│████│");
+                                                fprintf(file,"│███│");
                                         }
 				}
 		
@@ -149,7 +147,6 @@ void write(int n, int m, int x, int  y, int** plansza, int itnum, struct board_t
 		 }
 		fprintf(file,"\n");
 		}
-		fprintf(file,"\n");
 		}
 	fclose(file);
 }

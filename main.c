@@ -30,7 +30,6 @@ int main(int argc, char**argv){
 	int m=0;
 	int n=0;
 	int i=0;  	   // m,n - wymiary planszy, i - liczba iteracji
-	char *name; 	   // przedrostek nazw plików, do których będziemy zapisywać
 	int pos[2];	   // początkowa pozycja mrówki 
 	pos[0]=-1;	   // -1 będzie oznaczać, że użytkownik nie podał pozycji mrówki
 	pos[1]=-1;
@@ -38,8 +37,8 @@ int main(int argc, char**argv){
 	double blacks = 0; // % zapełnienia mapy czarnymi polami (domyślnie 0)
 	char *file;	   // nazwa pliku, z którego wczytamy mapę użytkownika
 	int aflag = 0;     // flaga -a
-	int j,k,l;	   // zmienne sterujące ('i' używamy już do czegoś innego)
-	int *tmp;
+	int j,k;	   // zmienne sterujące ('i' używamy już do czegoś innego)
+	int *tmp;	   // tymczasowy wiersz - do tworzenia tablicy
 
 	// Dostępne flagi:
 	// -c - wczytanie własnego pliku z gotową planszą (opcjonalnie)
@@ -57,16 +56,13 @@ int main(int argc, char**argv){
 	//      na środku planszy
 	// -d - początkowy kierunek mrówki: 0-N, 1-E, 2-S, 3-W (opcjonalnie, domyślnie 0 (N))
 	
-	while ((c = getopt(argc, argv, "c:b:f:m:n:i:ax:y:d:")) != -1)
+	while ((c = getopt(argc, argv, "c:b:m:n:i:ax:y:d:")) != -1)
 		switch(c){
 			case 'c':
 				file = optarg;
 				break;
 			case 'b':
 				blacks = atof(optarg);
-				break;
-			case 'f':
-				name = optarg;
 				break;
 			case 'm':
 				m = atoi(optarg);
@@ -90,7 +86,7 @@ int main(int argc, char**argv){
 				dir = atoi(optarg);
 				break;
 			case '?':
-				if (optopt == 'c' || optopt == 'b' || optopt == 'f' || optopt == 'm' || optopt == 'n' || optopt == 'i' || optopt == 'x' || optopt == 'y')
+				if (optopt == 'c' || optopt == 'b' || optopt == 'm' || optopt == 'n' || optopt == 'i' || optopt == 'x' || optopt == 'y')
 					fprintf(stderr, "Opcja -%c wymaga podania argumentu.\n", optopt);
 				else if (isprint(optopt))
 					fprintf(stderr, "Program nie rozpoznaje opcji -%c.\n", optopt);
@@ -214,22 +210,13 @@ int main(int argc, char**argv){
 			} else
 				put_back_on(board);
 		}
-		// tu będzie funkcja na zapisanie iteracji w pliku
-		// narazie wypisuję tablicę (w postaci binarnej) na stdout
-		
-		printf("Iteracja nr %d\n", j);
-		for (k=0;k<board.m;k++){
-			printf("[%d", board.data[k][0]);
-			for (l=1;l<board.n;l++)
-				printf(" %d", board.data[k][l]);
-			printf("]\n");
-		}
-		printf("\n");
-		
+
+		write1(j,board,dir);
 	}
 	if (finish==1){
 		printf("Mrówka wyszła poza planszę.\n");
-		printf("Program zakończył działanie po wykonaniu %d z %d iteracji.\n\n", --j, i);
+		printf("Program zakończył działanie po wykonaniu %d z %d iteracji.\n", --j, i);
+		printf("Aby temu zapobiec, wywołaj program z opcją -a.\n");
 	}
 	
 	free(tmp);
